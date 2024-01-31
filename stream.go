@@ -27,7 +27,6 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/net/trace"
 	"google.golang.org/grpc/balancer"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/encoding"
@@ -426,7 +425,7 @@ func (cs *clientStream) newAttemptLocked(isTransparent bool) (*csAttempt, error)
 		sh.HandleRPC(ctx, begin)
 	}
 
-	var trInfo *traceInfo
+	/*var trInfo *traceInfo
 	if EnableTracing {
 		trInfo = &traceInfo{
 			tr: trace.New("grpc.Sent."+methodFamily(method), method),
@@ -439,7 +438,7 @@ func (cs *clientStream) newAttemptLocked(isTransparent bool) (*csAttempt, error)
 		}
 		trInfo.tr.LazyLog(&trInfo.firstLine, false)
 		ctx = trace.NewContext(ctx, trInfo.tr)
-	}
+	}*/
 
 	if cs.cc.parsedTarget.URL.Scheme == internal.GRPCResolverSchemeExtraMetadata {
 		// Add extra metadata (metadata that will be added by transport) to context
@@ -455,7 +454,7 @@ func (cs *clientStream) newAttemptLocked(isTransparent bool) (*csAttempt, error)
 		cs:            cs,
 		dc:            cs.cc.dopts.dc,
 		statsHandlers: shs,
-		trInfo:        trInfo,
+		//trInfo:        trInfo,
 	}, nil
 }
 
@@ -471,9 +470,9 @@ func (a *csAttempt) getTransport() error {
 		}
 		return err
 	}
-	if a.trInfo != nil {
+	/*if a.trInfo != nil {
 		a.trInfo.firstLine.SetRemoteAddr(a.t.RemoteAddr())
-	}
+	}*/
 	return nil
 }
 
@@ -589,7 +588,7 @@ type csAttempt struct {
 	// trInfo may be nil (if EnableTracing is false).
 	// trInfo.tr is set when created (if EnableTracing is true),
 	// and cleared when the finish method is called.
-	trInfo *traceInfo
+	//trInfo *traceInfo
 
 	statsHandlers []stats.Handler
 	beginTime     time.Time
@@ -1034,13 +1033,13 @@ func (cs *clientStream) finish(err error) {
 
 func (a *csAttempt) sendMsg(m any, hdr, payld, data []byte) error {
 	cs := a.cs
-	if a.trInfo != nil {
+	/*if a.trInfo != nil {
 		a.mu.Lock()
 		if a.trInfo.tr != nil {
 			a.trInfo.tr.LazyLog(&payload{sent: true, msg: m}, true)
 		}
 		a.mu.Unlock()
-	}
+	}*/
 	if err := a.t.Write(a.s, hdr, payld, &transport.Options{Last: !cs.desc.ClientStreams}); err != nil {
 		if !cs.desc.ClientStreams {
 			// For non-client-streaming RPCs, we return nil instead of EOF on error
@@ -1092,13 +1091,13 @@ func (a *csAttempt) recvMsg(m any, payInfo *payloadInfo) (err error) {
 
 		return toRPCErr(err)
 	}
-	if a.trInfo != nil {
+	/*if a.trInfo != nil {
 		a.mu.Lock()
 		if a.trInfo.tr != nil {
 			a.trInfo.tr.LazyLog(&payload{sent: false, msg: m}, true)
 		}
 		a.mu.Unlock()
-	}
+	}*/
 	for _, sh := range a.statsHandlers {
 		sh.HandleRPC(a.ctx, &stats.InPayload{
 			Client:   true,
@@ -1170,7 +1169,7 @@ func (a *csAttempt) finish(err error) {
 		}
 		sh.HandleRPC(a.ctx, end)
 	}
-	if a.trInfo != nil && a.trInfo.tr != nil {
+	/*if a.trInfo != nil && a.trInfo.tr != nil {
 		if err == nil {
 			a.trInfo.tr.LazyPrintf("RPC: [OK]")
 		} else {
@@ -1179,7 +1178,7 @@ func (a *csAttempt) finish(err error) {
 		}
 		a.trInfo.tr.Finish()
 		a.trInfo.tr = nil
-	}
+	}*/
 	a.mu.Unlock()
 }
 
@@ -1545,7 +1544,7 @@ type serverStream struct {
 
 	maxReceiveMessageSize int
 	maxSendMessageSize    int
-	trInfo                *traceInfo
+	//trInfo                *traceInfo
 
 	statsHandler []stats.Handler
 
@@ -1608,7 +1607,7 @@ func (ss *serverStream) SetTrailer(md metadata.MD) {
 
 func (ss *serverStream) SendMsg(m any) (err error) {
 	defer func() {
-		if ss.trInfo != nil {
+		/*if ss.trInfo != nil {
 			ss.mu.Lock()
 			if ss.trInfo.tr != nil {
 				if err == nil {
@@ -1619,7 +1618,7 @@ func (ss *serverStream) SendMsg(m any) (err error) {
 				}
 			}
 			ss.mu.Unlock()
-		}
+		}*/
 		if err != nil && err != io.EOF {
 			st, _ := status.FromError(toRPCErr(err))
 			ss.t.WriteStatus(ss.s, st)
@@ -1683,7 +1682,7 @@ func (ss *serverStream) SendMsg(m any) (err error) {
 
 func (ss *serverStream) RecvMsg(m any) (err error) {
 	defer func() {
-		if ss.trInfo != nil {
+		/*if ss.trInfo != nil {
 			ss.mu.Lock()
 			if ss.trInfo.tr != nil {
 				if err == nil {
@@ -1694,7 +1693,7 @@ func (ss *serverStream) RecvMsg(m any) (err error) {
 				}
 			}
 			ss.mu.Unlock()
-		}
+		}*/
 		if err != nil && err != io.EOF {
 			st, _ := status.FromError(toRPCErr(err))
 			ss.t.WriteStatus(ss.s, st)

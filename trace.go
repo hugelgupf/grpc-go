@@ -18,7 +18,7 @@
 
 package grpc
 
-import (
+/*import (
 	"bytes"
 	"fmt"
 	"io"
@@ -120,4 +120,4 @@ func (f *fmtStringer) String() string {
 
 type stringer string
 
-func (s stringer) String() string { return string(s) }
+func (s stringer) String() string { return string(s) }*/
